@@ -79,7 +79,7 @@ export const saveToken = (tokenData) => {
 // Auth API calls
 export const registerUser = (userData) => {
   return api
-    .post("/users", {
+    .post("users", {
       name: userData.name,
       email: userData.email,
       password: userData.password,

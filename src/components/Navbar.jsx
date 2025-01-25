@@ -1,21 +1,52 @@
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
+import "./Navbar.css";
 
-const Navbar = () => {
+function Navbar({ user, setUser }) {
   return (
     <nav className="navbar">
-      <Link to="/" className="nav-brand">
-        Events App
-      </Link>
-      <div className="nav-links">
-        <Link to="/login" className="nav-link">
-          Login
-        </Link>
-        <Link to="/register" className="nav-link">
-          Register
-        </Link>
+      <div className="nav-left">
+        <Link to="/">Events Hub</Link>
+      </div>
+      <div className="nav-right">
+        {user ? (
+          <>
+            <span className="welcome-message">Welcome, {user.name}!</span>
+            <NavLink
+              to="/dashboard"
+              className={({ isActive }) => (isActive ? "active" : "")}
+            >
+              Dashboard
+            </NavLink>
+            <button
+              onClick={() => {
+                setUser(null);
+                // Optionally redirect to home page
+                window.location.href = "/";
+              }}
+              className="logout-btn"
+            >
+              Logout
+            </button>
+          </>
+        ) : (
+          <>
+            <NavLink
+              to="/login"
+              className={({ isActive }) => (isActive ? "active" : "")}
+            >
+              Login
+            </NavLink>
+            <NavLink
+              to="/register"
+              className={({ isActive }) => (isActive ? "active" : "")}
+            >
+              Register
+            </NavLink>
+          </>
+        )}
       </div>
     </nav>
   );
-};
+}
 
 export default Navbar;

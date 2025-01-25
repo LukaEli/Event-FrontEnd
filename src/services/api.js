@@ -88,17 +88,35 @@ export const registerUser = (userData) => {
     .then((response) => response.data);
 };
 
-export const loginUser = (credentials) => {
-  return api
-    .post("/auth/login", {
-      email: credentials.email,
-      password: credentials.password,
-    })
-    .then((response) => response.data);
+export const loginUser = async (credentials) => {
+  try {
+    // Get all users
+    const response = await api.get("/users");
+
+    // Find matching user from the data array
+    const user = response.data.data.find(
+      (user) =>
+        user.email === credentials.email &&
+        user.password === credentials.password
+    );
+
+    if (!user) {
+      throw new Error("Invalid credentials");
+    }
+
+    // Since this is for Google Calendar tokens, we should return the user
+    // without trying to create/get tokens here.
+    // The Google Calendar integration should handle token creation separately
+    return {
+      user,
+    };
+  } catch (error) {
+    throw new Error("Login failed: " + error.message);
+  }
 };
 
 export const getCurrentUser = () => {
-  return api.get("/auth/me").then((response) => response.data);
+  return api.get("/users/me").then((response) => response.data);
 };
 
 export default api;

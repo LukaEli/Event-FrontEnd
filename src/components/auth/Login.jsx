@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../../services/api";
+import Spinner from "../common/Spinner";
 import "./Auth.css";
 
 const Login = ({ setUser }) => {
@@ -10,6 +11,7 @@ const Login = ({ setUser }) => {
     password: "",
   });
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -21,6 +23,7 @@ const Login = ({ setUser }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
 
     try {
       const response = await loginUser(formData);
@@ -28,6 +31,8 @@ const Login = ({ setUser }) => {
       navigate("/dashboard");
     } catch (err) {
       setError("Invalid credentials. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -48,6 +53,7 @@ const Login = ({ setUser }) => {
               required
               autoComplete="email"
               placeholder="Enter your email"
+              disabled={isLoading}
             />
           </div>
           <div className="form-group">
@@ -61,10 +67,23 @@ const Login = ({ setUser }) => {
               required
               autoComplete="current-password"
               placeholder="Enter your password"
+              disabled={isLoading}
             />
           </div>
-          <button type="submit" className="auth-button">
-            Login
+          <button
+            type="submit"
+            className={`auth-button ${isLoading ? "loading" : ""}`}
+            disabled={isLoading}
+          >
+            <span className="button-text">
+              {isLoading ? (
+                <div className="button-spinner">
+                  <Spinner />
+                </div>
+              ) : (
+                "Login"
+              )}
+            </span>
           </button>
         </form>
       </div>

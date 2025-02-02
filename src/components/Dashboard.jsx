@@ -5,14 +5,19 @@ import {
   deleteEvent,
   registerForEvent,
 } from "../services/api";
+import useGoogleCalendar from "./UseGoogleCalendar";
 import "./Dashboard.css";
 
 const Dashboard = ({ user }) => {
+  const googleCalendar = useGoogleCalendar();
   const [events, setEvents] = useState([]);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     location: "",
+    date: "",
+    startTime: "",
+    endTime: "",
   });
 
   const [registrationStatus, setRegistrationStatus] = useState({});
@@ -29,8 +34,8 @@ const Dashboard = ({ user }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Current user:", user);
-    console.log("localStorage role:", localStorage.getItem("role"));
+    //console.log("Current user:", user);
+    //console.log("localStorage role:", localStorage.getItem("role"));
 
     if (!user || user.role !== "staff") {
       alert("Only staff members can create events!");
@@ -43,25 +48,32 @@ const Dashboard = ({ user }) => {
       role: user.role,
     };
 
-    console.log("Sending event data:", eventData);
+    //console.log("Sending event data:", eventData);
 
     try {
       const newEvent = await createEvent(eventData);
-      console.log("Response:", newEvent);
+      //console.log("Response:", newEvent);
       setEvents([...events, { id: newEvent.eventId, ...eventData }]);
-      setFormData({ title: "", description: "", location: "" });
+      setFormData({
+        title: "",
+        description: "",
+        location: "",
+        date: "",
+        startTime: "",
+        endTime: "",
+      });
     } catch (error) {
       console.error("Error creating event:", error);
-
       const errorMessage =
         error.response?.data?.error || error.message || "Error creating event";
       alert(errorMessage);
     }
   };
+
   const handleDelete = async (eventId) => {
-    console.log("Attempting to delete event:", eventId);
-    console.log("User role:", user?.role);
-    console.log("LocalStorage role:", localStorage.getItem("role"));
+    //console.log("Attempting to delete event:", eventId);
+    //console.log("User role:", user?.role);
+    //console.log("LocalStorage role:", localStorage.getItem("role"));
 
     if (!user || user.role !== "staff") {
       alert("Only staff members can delete events!");
@@ -91,22 +103,78 @@ const Dashboard = ({ user }) => {
     }
 
     try {
+      // Check if already registered in local state
+      if (registrationStatus[eventId] === "registered") {
+        alert("You are already registered for this event!");
+        return;
+      }
+
       const registrationData = {
         user_id: user.id,
         event_id: eventId,
       };
 
-      await registerForEvent(registrationData);
-      setRegistrationStatus((prev) => ({
-        ...prev,
-        [eventId]: "registered",
-      }));
-      alert("Successfully registered for the event!");
+      // console.log("Sending registration data:", registrationData);
+
+      try {
+        const response = await registerForEvent(registrationData);
+        //  console.log("Registration response:", response);
+
+        setRegistrationStatus((prev) => ({
+          ...prev,
+          [eventId]: "registered",
+        }));
+
+        const event = events.find((e) => e.id === eventId);
+        if (
+          event &&
+          googleCalendar.isInitialized &&
+          !googleCalendar.isLoading
+        ) {
+          const addToCalendar = window.confirm(
+            "Would you like to add this event to your Google Calendar?"
+          );
+          if (addToCalendar) {
+            try {
+              await googleCalendar.addToCalendar(event);
+              alert("Event successfully added to your Google Calendar!");
+            } catch (error) {
+              console.error("Failed to add to Google Calendar:", error);
+              if (error.message?.includes("popup")) {
+                alert(
+                  "Please allow popups for this site to use Google Calendar integration."
+                );
+              } else {
+                alert(
+                  "Failed to add event to Google Calendar. Please try again."
+                );
+              }
+            }
+          }
+        }
+
+        alert("Successfully registered for the event!");
+      } catch (error) {
+        console.error("Error registering for event:", error);
+        if (error.response?.data?.error?.includes("UNIQUE constraint failed")) {
+          alert("You are already registered for this event!");
+          // Update local state to reflect registration status
+          setRegistrationStatus((prev) => ({
+            ...prev,
+            [eventId]: "registered",
+          }));
+        } else {
+          const errorMessage =
+            error.response?.data?.message ||
+            error.response?.data?.error ||
+            error.message ||
+            "Error registering for event";
+          alert(errorMessage);
+        }
+      }
     } catch (error) {
-      console.error("Error registering for event:", error);
-      const errorMessage =
-        error.response?.data?.error || "Error registering for event";
-      alert(errorMessage);
+      console.error("Unexpected error:", error);
+      alert("An unexpected error occurred. Please try again.");
     }
   };
 
@@ -137,6 +205,27 @@ const Dashboard = ({ user }) => {
             value={formData.location}
             onChange={handleChange}
           />
+          <input
+            type="date"
+            name="date"
+            value={formData.date}
+            onChange={handleChange}
+            required
+          />
+          <input
+            type="time"
+            name="startTime"
+            value={formData.startTime}
+            onChange={handleChange}
+            required
+          />
+          <input
+            type="time"
+            name="endTime"
+            value={formData.endTime}
+            onChange={handleChange}
+            required
+          />
           <button type="submit">Create Event</button>
         </form>
       )}
@@ -151,6 +240,11 @@ const Dashboard = ({ user }) => {
               <p>Location: {event.location}</p>
               {event.date && (
                 <p>Date: {new Date(event.date).toLocaleDateString()}</p>
+              )}
+              {event.startTime && (
+                <p>
+                  Time: {event.startTime} - {event.endTime}
+                </p>
               )}
             </div>
             <div className="event-actions">

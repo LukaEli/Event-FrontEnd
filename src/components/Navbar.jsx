@@ -20,7 +20,7 @@ function Navbar({ user, setUser }) {
             <button
               onClick={() => {
                 setUser(null);
-                // Optionally redirect to home page
+
                 window.location.href = "/";
               }}
               className="logout-btn"

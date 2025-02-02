@@ -6,7 +6,7 @@ import "./Auth.css";
 
 function Register({ setUser }) {
   const navigate = useNavigate();
-  const STAFF_PIN = "13111999";
+  const STAFF_PIN = import.meta.env.VITE_STAFF_PIN;
 
   const [formData, setFormData] = useState({
     name: "",
@@ -37,7 +37,7 @@ function Register({ setUser }) {
         role: formData.isStaff ? "staff" : "user",
       });
       setUser(response.user);
-      navigate("/dashboard");
+      localStorage.setItem("user", JSON.stringify(response.user));
     } catch (err) {
       setError(err.message || "Registration failed. Please try again.");
     } finally {
@@ -88,6 +88,7 @@ function Register({ setUser }) {
               placeholder="Enter your password"
               disabled={isLoading}
               required
+              autoComplete="off"
             />
           </div>
 
@@ -117,6 +118,7 @@ function Register({ setUser }) {
                 placeholder="Enter staff PIN"
                 disabled={isLoading}
                 required={formData.isStaff}
+                autoComplete="off"
               />
               <small className="helper-text">
                 Required for staff registration

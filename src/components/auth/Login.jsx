@@ -28,6 +28,14 @@ const Login = ({ setUser }) => {
     try {
       const response = await loginUser(formData);
       setUser(response.user);
+
+      localStorage.setItem("user", JSON.stringify(response.user));
+      localStorage.setItem("role", response.user.role);
+      localStorage.setItem("token", response.user.token || "dummy-token");
+
+      //   console.log("Stored user role:", response.user.role);
+      //   console.log("LocalStorage role:", localStorage.getItem("role"));
+
       navigate("/dashboard");
     } catch (err) {
       setError("Invalid credentials. Please try again.");

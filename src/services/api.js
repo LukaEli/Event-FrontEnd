@@ -37,7 +37,25 @@ export const fetchEvents = (eventId) => {
 };
 
 export const createEvent = (eventData) => {
-  return api.post("/events", eventData).then((response) => response.data);
+  const userRole = localStorage.getItem("role") || eventData.role;
+  const token = localStorage.getItem("token");
+
+  if (!userRole) {
+    throw new Error("Authentication required - No role found");
+  }
+
+  return api
+    .post(
+      "/events",
+      { ...eventData, role: userRole },
+      {
+        headers: {
+          Authorization: `Bearer ${token || "dummy-token"}`,
+          "X-User-Role": userRole,
+        },
+      }
+    )
+    .then((response) => response.data);
 };
 
 export const updateEvent = (eventId, eventData) => {
@@ -47,17 +65,39 @@ export const updateEvent = (eventId, eventData) => {
 };
 
 export const deleteEvent = (eventId) => {
-  return api.delete(`/events/${eventId}`).then((response) => response.data);
-};
+  const userRole = localStorage.getItem("role");
+  const token = localStorage.getItem("token") || "dummy-token";
 
+  if (!userRole) {
+    throw new Error("Authentication required - No role found");
+  }
+
+  return api
+    .delete(`/events/${eventId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "X-User-Role": userRole,
+      },
+      data: { role: userRole },
+    })
+    .then((response) => response.data);
+};
 // Event Registrations API calls
 export const fetchRegistrations = () => {
   return api.get("/event-registrations").then((response) => response.data);
 };
 
 export const registerForEvent = (registrationData) => {
+  const token = localStorage.getItem("token");
+  const userRole = localStorage.getItem("role");
+
   return api
-    .post("/event-registrations", registrationData)
+    .post("/event-registrations", registrationData, {
+      headers: {
+        Authorization: `Bearer ${token || "dummy-token"}`,
+        "X-User-Role": userRole,
+      },
+    })
     .then((response) => response.data);
 };
 
@@ -93,7 +133,6 @@ export const loginUser = async (credentials) => {
     // Get all users
     const response = await api.get("/users");
 
-    // Find matching user from the data array
     const user = response.data.data.find(
       (user) =>
         user.email === credentials.email &&
@@ -104,9 +143,6 @@ export const loginUser = async (credentials) => {
       throw new Error("Invalid credentials");
     }
 
-    // Since this is for Google Calendar tokens, we should return the user
-    // without trying to create/get tokens here.
-    // The Google Calendar integration should handle token creation separately
     return {
       user,
     };

@@ -42,7 +42,6 @@ This Event Management System is a full-stack web application that allows users t
 
 - Node.js (v14 or later)
 - npm or yarn
-- Google Cloud Project (for Calendar API)
 
 ## 🔧 Installation
 
@@ -51,5 +50,5 @@ This Event Management System is a full-stack web application that allows users t
 ```bash
 git clone https://github.com/LukaEli/Event-FrontEnd.git
 cd event-frontend
-npm I
+npm install
 ```

@@ -4,8 +4,8 @@ import Navbar from "./components/Navbar";
 import Register from "./components/auth/Register";
 import Login from "./components/auth/Login";
 import Dashboard from "./components/Dashboard";
+import EventsList from "./components/EventList";
 
-// app.jsx
 function App() {
   const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem("user");
@@ -32,6 +32,7 @@ function App() {
       <div className="app">
         <Navbar user={user} setUser={setUser} />
         <Routes>
+          <Route path="/" element={<EventsList />} />
           <Route path="/register" element={<Register setUser={setUser} />} />
           <Route path="/login" element={<Login setUser={setUser} />} />
           <Route path="/dashboard" element={<Dashboard user={user} />} />

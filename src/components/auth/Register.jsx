@@ -16,11 +16,13 @@ function Register({ setUser }) {
     staffPin: "",
   });
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
 
     if (formData.isStaff && formData.staffPin !== STAFF_PIN) {
       setError("Invalid staff PIN");
@@ -37,9 +39,20 @@ function Register({ setUser }) {
         role: formData.isStaff ? "staff" : "user",
       });
       setUser(response.user);
-      localStorage.setItem("user", JSON.stringify(response.user));
+      setSuccess("Registration successful! Redirecting to login page...");
+
+      // Wait for 3 seconds before redirecting
+      setTimeout(() => {
+        navigate("/login");
+      }, 3000);
     } catch (err) {
-      setError(err.message || "Registration failed. Please try again.");
+      if (err.response?.status === 400) {
+        setError(
+          "This email is already registered. Please use a different email or try logging in."
+        );
+      } else {
+        setError(err.message || "Registration failed. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -50,6 +63,7 @@ function Register({ setUser }) {
       <div className="auth-box">
         <h2>Register</h2>
         {error && <div className="error-message">{error}</div>}
+        {success && <div className="success-message">{success}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Name</label>

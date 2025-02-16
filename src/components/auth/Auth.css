@@ -59,7 +59,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  min-height: 45px; /* Ensure consistent height */
+  min-height: 45px;
 }
 
 .auth-button:hover {
@@ -76,7 +76,6 @@
   cursor: not-allowed;
 }
 
-/* Add this if you want the spinner to be white when inside the button */
 .auth-button .spinner {
   border-color: rgba(255, 255, 255, 0.3);
   border-top-color: white;
@@ -151,4 +150,13 @@
 .form-group input[type="password"][placeholder="Enter staff PIN"]:focus {
   border-color: #2563eb;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.success-message {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  text-align: center;
 }

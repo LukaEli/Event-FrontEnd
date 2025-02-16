@@ -155,4 +155,19 @@ export const getCurrentUser = () => {
   return api.get("/users/me").then((response) => response.data);
 };
 
+// Update the unregisterForEvent function to match the backend implementation
+export const unregisterForEvent = (registrationId) => {
+  const token = localStorage.getItem("token");
+  const userRole = localStorage.getItem("role");
+
+  return api
+    .delete(`/event-registrations/${registrationId}`, {
+      headers: {
+        Authorization: `Bearer ${token || "dummy-token"}`,
+        "X-User-Role": userRole,
+      },
+    })
+    .then((response) => response.data);
+};
+
 export default api;

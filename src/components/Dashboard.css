@@ -122,12 +122,13 @@
 }
 
 .register-btn {
-  padding: 0.5rem 1rem;
+  padding: 5px 10px;
   background-color: #4caf50;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  margin: 2px;
 }
 
 .register-btn:hover {
@@ -146,4 +147,40 @@
 .event-details p {
   margin: 0.5rem 0;
   color: #666;
+}
+
+.unregister-btn {
+  padding: 5px 10px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+  margin: 2px;
+}
+
+.unregister-btn:hover {
+  background-color: #d32f2f;
+}
+
+.add-to-calendar-btn {
+  padding: 5px 10px;
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+  margin: 2px;
+}
+
+.add-to-calendar-btn:hover {
+  background-color: #0092a5;
+  transform: scale(1.05);
+}
+
+.add-to-calendar-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.5);
 }

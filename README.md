@@ -53,3 +53,15 @@ git clone https://github.com/LukaEli/Event-FrontEnd.git
 cd event-frontend
 npm I
 ```
+
+## Login
+
+- you can login as a user:
+
+email: test1@gmail.com
+password: 12345678
+
+- Staff member:
+
+email: staff@gmail.com
+password: staff123

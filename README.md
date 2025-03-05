@@ -78,3 +78,6 @@ npm I
 
 - Email: test@example.com
 - Password: password123
+
+- Email: staff@gmail.com
+- Password: 12345678

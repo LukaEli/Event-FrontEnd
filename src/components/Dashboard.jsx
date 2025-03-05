@@ -1,17 +1,22 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   fetchEvents,
-  createEvent,
-  deleteEvent,
-  registerForEvent,
   fetchRegistrations,
   unregisterForEvent,
+  createEvent,
+  deleteEvent,
 } from "../services/api";
 import CustomCalendar from "./CustomCalendar";
 import "./Dashboard.css";
 
-const Dashboard = ({ user }) => {
-  const [events, setEvents] = useState([]);
+const Dashboard = ({ user, toggleModal, isModalOpen }) => {
+  // State management
+  const [registeredEvents, setRegisteredEvents] = useState([]);
+  const [allEvents, setAllEvents] = useState([]);
+  const [registrationStatus, setRegistrationStatus] = useState({});
+  const [registrationIDs, setRegistrationIDs] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -21,211 +26,61 @@ const Dashboard = ({ user }) => {
     endTime: "",
   });
 
-  // Initialize registrationStatus from localStorage
-  const [registrationStatus, setRegistrationStatus] = useState(() => {
-    const savedStatus = localStorage.getItem("registrationStatus");
-    return savedStatus ? JSON.parse(savedStatus) : {};
-  });
-
-  const [registrationIDs, setRegistrationIDs] = useState(() => {
-    const savedRegistrations = localStorage.getItem("registrationIDs");
-    return savedRegistrations ? JSON.parse(savedRegistrations) : {};
-  });
-
+  // Fetch user events on component mount or user change
   useEffect(() => {
-    const fetchAllData = async () => {
-      try {
-        // Fetch events
-        const eventsData = await fetchEvents();
-
-        setEvents(eventsData.data);
-
-        // If we have a user, fetch registrations
-        if (user && user.id) {
-          // Fetch all registrations
-          const registrationsData = await fetchRegistrations();
-
-          // Filter registrations for current user
-          const userRegistrations = registrationsData.registrations.filter(
-            (reg) => reg.user_id === user.id
-          );
-
-          // Create registration status object
-          const newRegistrationStatus = {};
-          userRegistrations.forEach((reg) => {
-            newRegistrationStatus[reg.event_id] = "registered";
-          });
-
-          const registrationIDs = {};
-          userRegistrations.forEach((reg) => {
-            registrationIDs[reg.event_id] = reg.id;
-          });
-          // Update state and localStorage
-          setRegistrationStatus(newRegistrationStatus);
-          localStorage.setItem(
-            "registrationStatus",
-            JSON.stringify(newRegistrationStatus)
-          );
-
-          setRegistrationIDs(registrationIDs);
-          localStorage.setItem(
-            "registrationIDs",
-            JSON.stringify(registrationIDs)
-          );
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchAllData();
-  }, [user]);
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!user || user.role !== "staff") {
-      alert("Only staff members can create events!");
-      return;
-    }
-
-    const convertTimeToMinutes = (timeString) => {
-      if (!timeString) return 0;
-      const [hours, minutes] = timeString.split(":").map(Number);
-      return hours * 60 + minutes;
-    };
-
-    const { startTime, endTime } = formData;
-    const startMinutes = convertTimeToMinutes(startTime);
-    const endMinutes = convertTimeToMinutes(endTime);
-
-    // Check if end time is earlier than or equal to start time
-    if (startTime && endTime && startMinutes >= endMinutes) {
-      alert("End time must be later than start time!");
-      return;
-    }
-
-    const eventData = {
-      ...formData,
-      created_by: user.id,
-      role: user.role,
-    };
-
-    try {
-      const newEvent = await createEvent(eventData);
-      setEvents([...events, { id: newEvent.eventId, ...eventData }]);
-      setFormData({
-        title: "",
-        description: "",
-        location: "",
-        date: "",
-        startTime: "",
-        endTime: "",
-      });
-    } catch (error) {
-      console.error("Error creating event:", error);
-      const errorMessage =
-        error.response?.data?.error || error.message || "Error creating event";
-      alert(errorMessage);
-    }
-  };
-
-  const handleDelete = async (eventId) => {
-    if (!user || user.role !== "staff") {
-      alert("Only staff members can delete events!");
-      return;
-    }
-
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this event?"
-    );
-    if (!confirmDelete) return;
-
-    try {
-      await deleteEvent(eventId);
-      setEvents(events.filter((event) => event.id !== eventId));
-
-      // Also remove from registration status
-      const newRegistrationStatus = { ...registrationStatus };
-      delete newRegistrationStatus[eventId];
-      setRegistrationStatus(newRegistrationStatus);
-      localStorage.setItem(
-        "registrationStatus",
-        JSON.stringify(newRegistrationStatus)
-      );
-    } catch (error) {
-      console.error("Error deleting event:", error);
-      const errorMessage =
-        error.response?.data?.error || error.message || "Error deleting event";
-      alert(errorMessage);
-    }
-  };
-
-  const handleRegister = async (eventId) => {
-    if (!user) {
-      alert("Please log in to register for events!");
-      return;
-    }
-
-    try {
-      if (registrationStatus[eventId] === "registered") {
-        alert("You are already registered for this event!");
+    const fetchUserEvents = async () => {
+      if (!user) {
+        setRegisteredEvents([]);
+        setAllEvents([]);
+        setRegistrationStatus({});
+        setIsLoading(false);
         return;
       }
 
-      const registrationData = {
-        user_id: user.id,
-        event_id: eventId,
-      };
+      try {
+        setIsLoading(true);
+        // Fetch all registrations
+        const registrationsData = await fetchRegistrations();
 
-      await registerForEvent(registrationData);
-
-      // Update registration status in state and localStorage
-      const newRegistrationStatus = {
-        ...registrationStatus,
-        [eventId]: "registered",
-      };
-      setRegistrationStatus(newRegistrationStatus);
-      localStorage.setItem(
-        "registrationStatus",
-        JSON.stringify(newRegistrationStatus)
-      );
-
-      alert("Successfully registered for the event!");
-    } catch (error) {
-      console.error("Error registering for event:", error);
-      if (error.response?.data?.error?.includes("UNIQUE constraint failed")) {
-        alert("You are already registered for this event!");
-        const newRegistrationStatus = {
-          ...registrationStatus,
-          [eventId]: "registered",
-        };
-        setRegistrationStatus(newRegistrationStatus);
-        localStorage.setItem(
-          "registrationStatus",
-          JSON.stringify(newRegistrationStatus)
+        // Filter registrations for current user
+        const userRegistrations = registrationsData.registrations.filter(
+          (reg) => reg.user_id === user.id
         );
-      } else {
-        const errorMessage =
-          error.response?.data?.message ||
-          error.response?.data?.error ||
-          error.message ||
-          "Error registering for event";
-        alert(errorMessage);
+
+        // Create registration status and IDs objects
+        const newRegistrationStatus = {};
+        const newRegistrationIDs = {};
+        userRegistrations.forEach((reg) => {
+          newRegistrationStatus[reg.event_id] = "registered";
+          newRegistrationIDs[reg.event_id] = reg.id;
+        });
+
+        // Fetch all events
+        const eventsResponse = await fetchEvents();
+        const allEvents = eventsResponse.data;
+
+        // Filter events to only include registered events
+        const userEvents = allEvents.filter((event) =>
+          userRegistrations.some((reg) => reg.event_id === event.id)
+        );
+
+        setRegisteredEvents(userEvents);
+        setAllEvents(allEvents);
+        setRegistrationStatus(newRegistrationStatus);
+        setRegistrationIDs(newRegistrationIDs);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+        setError("Failed to load events");
+        setIsLoading(false);
       }
-    }
-  };
+    };
 
+    fetchUserEvents();
+  }, [user]);
+
+  // Handle unregistering from an event
   const handleUnregister = async (eventId) => {
-    if (!user) {
-      alert("Please log in to unregister from events!");
-      return;
-    }
-
     try {
       // Retrieve the registration ID for the event
       const registrationId = registrationIDs[eventId];
@@ -235,18 +90,23 @@ const Dashboard = ({ user }) => {
         return;
       }
 
-      await unregisterForEvent(registrationId); // Pass the registration ID
+      await unregisterForEvent(registrationId);
 
-      // Update registration status in state and localStorage
-      const newRegistrationStatus = {
-        ...registrationStatus,
-        [eventId]: null, // Clear the registration status
-      };
-      setRegistrationStatus(newRegistrationStatus);
-      localStorage.setItem(
-        "registrationStatus",
-        JSON.stringify(newRegistrationStatus)
+      // Remove the event from registered events
+      const updatedEvents = registeredEvents.filter(
+        (event) => event.id !== eventId
       );
+      setRegisteredEvents(updatedEvents);
+
+      // Update registration status
+      const newRegistrationStatus = { ...registrationStatus };
+      delete newRegistrationStatus[eventId];
+      setRegistrationStatus(newRegistrationStatus);
+
+      // Update registration IDs
+      const newRegistrationIDs = { ...registrationIDs };
+      delete newRegistrationIDs[eventId];
+      setRegistrationIDs(newRegistrationIDs);
 
       alert("Successfully unregistered from the event!");
     } catch (error) {
@@ -260,153 +120,193 @@ const Dashboard = ({ user }) => {
     }
   };
 
-  // Add this function to format the date and time
-  const formatDateTime = (date, time) => {
-    if (date === null || time === null) {
-      return "";
+  // Handle form input changes
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // Handle event creation submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!user || user.role !== "staff") {
+      alert("Only staff members can create events!");
+      return;
     }
 
-    // Extract the date components
-    const dateObj = new Date(date);
-    const year = dateObj.getUTCFullYear();
-    const month = String(dateObj.getUTCMonth() + 1).padStart(2, "0"); // Months are zero-based
-    const day = String(dateObj.getUTCDate()).padStart(2, "0");
+    // Convert time to minutes for validation
+    const convertTimeToMinutes = (timeString) => {
+      if (!timeString) return 0;
+      const [hours, minutes] = timeString.split(":").map(Number);
+      return hours * 60 + minutes;
+    };
 
-    // Extract the time components
-    const [hours, minutes] = time.split(":");
+    const { startTime, endTime } = formData;
+    const startMinutes = convertTimeToMinutes(startTime);
+    const endMinutes = convertTimeToMinutes(endTime);
 
-    return `${year}${month}${day}T${hours}${minutes}00`; // Format: YYYYMMDDTHHMMSS
+    // Validate end time
+    if (startTime && endTime && startMinutes >= endMinutes) {
+      alert("End time must be later than start time!");
+      return;
+    }
+
+    const eventData = {
+      ...formData,
+      created_by: user.id,
+      role: user.role,
+    };
+
+    try {
+      const newEvent = await createEvent(eventData);
+
+      // Update all events list
+      setAllEvents([...allEvents, newEvent]);
+
+      // Reset form
+      setFormData({
+        title: "",
+        description: "",
+        location: "",
+        date: "",
+        startTime: "",
+        endTime: "",
+      });
+
+      alert("Event created successfully!");
+    } catch (error) {
+      console.error("Error creating event:", error);
+      const errorMessage =
+        error.response?.data?.error || error.message || "Error creating event";
+      alert(errorMessage);
+    }
   };
+
+  // Handle event deletion
+  const handleDelete = async (eventId) => {
+    if (!user || user.role !== "staff") {
+      alert("Only staff members can delete events!");
+      return;
+    }
+
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this event?"
+    );
+    if (!confirmDelete) return;
+
+    try {
+      await deleteEvent(eventId);
+
+      // Remove the event from all events list
+      const updatedAllEvents = allEvents.filter(
+        (event) => event.id !== eventId
+      );
+      setAllEvents(updatedAllEvents);
+
+      // Remove from registered events if it exists there
+      const updatedRegisteredEvents = registeredEvents.filter(
+        (event) => event.id !== eventId
+      );
+      setRegisteredEvents(updatedRegisteredEvents);
+
+      alert("Event deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting event:", error);
+      const errorMessage =
+        error.response?.data?.error || error.message || "Error deleting event";
+      alert(errorMessage);
+    }
+  };
+
+  // Render loading or error states
+  if (!user) {
+    return <div>Please log in to view your dashboard.</div>;
+  }
+
+  if (isLoading) {
+    return <div>Loading events...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
 
   return (
     <div className="dashboard-container">
-      <h2>Event Dashboard</h2>
+      <h2>Dashboard</h2>
 
-      {/* Custom Calendar View */}
-      <CustomCalendar events={events} registrationStatus={registrationStatus} />
+      {/* Custom Calendar View for Registered Events */}
+      <CustomCalendar
+        events={registeredEvents}
+        registrationStatus={registrationStatus}
+      />
 
-      {user?.role === "staff" && (
-        <form className="event-form" onSubmit={handleSubmit}>
-          <input
-            type="text"
-            name="title"
-            placeholder="Event Title"
-            value={formData.title}
-            onChange={handleChange}
-            required
-          />
-          <textarea
-            name="description"
-            placeholder="Event Description"
-            value={formData.description}
-            onChange={handleChange}
-          />
-          <input
-            type="text"
-            name="location"
-            placeholder="Event Location"
-            value={formData.location}
-            onChange={handleChange}
-          />
-          <input
-            type="date"
-            name="date"
-            value={formData.date}
-            onChange={handleChange}
-            required
-          />
-          <input
-            type="time"
-            name="startTime"
-            value={formData.startTime}
-            onChange={handleChange}
-            required
-          />
-          <input
-            type="time"
-            name="endTime"
-            value={formData.endTime}
-            onChange={handleChange}
-            required
-          />
-          <button type="submit">Create Event</button>
-        </form>
+      <h3>My Registered Events</h3>
+      {registeredEvents.length === 0 ? (
+        <p>You have not registered for any events.</p>
+      ) : (
+        <ul className="event-list">
+          {registeredEvents.map((event) => (
+            <li key={event.id} className="event-item">
+              <div className="event-details">
+                <strong>{event.title}</strong>
+                <p>{event.description}</p>
+                <p>Location: {event.location}</p>
+                {event.date && (
+                  <p>Date: {new Date(event.date).toLocaleDateString()}</p>
+                )}
+                {event.start_time && (
+                  <p>
+                    Time: {event.start_time} - {event.end_time}
+                  </p>
+                )}
+              </div>
+              <div className="event-actions">
+                <button
+                  className="unregister-btn"
+                  onClick={() => handleUnregister(event.id)}
+                >
+                  Unregister
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
 
-      <h3>Existing Events</h3>
-      <ul className="event-list">
-        {events.map((event) => (
-          <li key={event.id} className="event-item">
-            <div className="event-details">
-              <strong>{event.title}</strong>
-              <p>{event.description}</p>
-              <p>Location: {event.location}</p>
-              {event.date && (
-                <p>Date: {new Date(event.date).toLocaleDateString()}</p>
-              )}
-              {event.start_time && (
-                <p>
-                  Time: {event.start_time} - {event.end_time}
-                </p>
-              )}
-            </div>
-            <div className="event-actions">
-              {user?.role === "staff" ? (
-                <button
-                  className="delete-btn"
-                  onClick={() => handleDelete(event.id)}
-                >
-                  Delete
-                </button>
-              ) : (
-                user && (
-                  <>
-                    {registrationStatus[event.id] === "registered" ? (
-                      <button
-                        className="unregister-btn"
-                        onClick={() => handleUnregister(event.id)}
-                      >
-                        Unregister
-                      </button>
-                    ) : (
-                      <button
-                        className={`register-btn ${
-                          registrationStatus[event.id] === "registered"
-                            ? "registered"
-                            : ""
-                        }`}
-                        onClick={() => handleRegister(event.id)}
-                        disabled={registrationStatus[event.id] === "registered"}
-                      >
-                        Register
-                      </button>
-                    )}
-                    <a
-                      href={`https://calendar.google.com/calendar/r/eventedit?text=${encodeURIComponent(
-                        event.title
-                      )}&dates=${formatDateTime(
-                        event.date,
-                        event.start_time
-                      )}/${formatDateTime(
-                        event.date,
-                        event.end_time
-                      )}&details=${encodeURIComponent(
-                        event.description
-                      )}&location=${encodeURIComponent(event.location)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <button className="add-to-calendar-btn">
-                        Add to Google Calendar
-                      </button>
-                    </a>
-                  </>
-                )
-              )}
-            </div>
-          </li>
-        ))}
-      </ul>
+      {/* Staff Event Management */}
+      {user?.role === "staff" && (
+        <>
+          <h3>All Events</h3>
+          <ul className="event-list">
+            {allEvents.map((event) => (
+              <li key={event.id} className="event-item">
+                <div className="event-details">
+                  <strong>{event.title}</strong>
+                  <p>{event.description}</p>
+                  <p>Location: {event.location}</p>
+                  {event.date && (
+                    <p>Date: {new Date(event.date).toLocaleDateString()}</p>
+                  )}
+                  {event.start_time && (
+                    <p>
+                      Time: {event.start_time} - {event.end_time}
+                    </p>
+                  )}
+                </div>
+                <div className="event-actions">
+                  <button
+                    className="delete-btn"
+                    onClick={() => handleDelete(event.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 };

@@ -1,5 +1,18 @@
 # Event Management System
 
+## 🌐 Hosted App
+
+You can access the hosted application [here](https://12event.netlify.app/).
+
+## 🔑 Login Credentials
+
+- **User Login:**
+  - Email: test2@example.com
+  - Password: 13111999
+- **Staff Login:**
+  - Email: test@example.com
+  - Password: password123
+
 ## Overview
 
 This Event Management System is a full-stack web application that allows users to create, view, register for, and manage events. The application provides different functionalities for staff and regular users.
@@ -58,10 +71,10 @@ npm I
 
 - you can login as a user:
 
-email: test1@gmail.com
-password: 12345678
+- Email: test2@example.com
+- Password: 13111999
 
 - Staff member:
 
-email: staff@gmail.com
-password: staff123
+- Email: test@example.com
+- Password: password123

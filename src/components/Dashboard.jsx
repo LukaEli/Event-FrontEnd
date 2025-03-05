@@ -93,6 +93,22 @@ const Dashboard = ({ user }) => {
       return;
     }
 
+    const convertTimeToMinutes = (timeString) => {
+      if (!timeString) return 0;
+      const [hours, minutes] = timeString.split(":").map(Number);
+      return hours * 60 + minutes;
+    };
+
+    const { startTime, endTime } = formData;
+    const startMinutes = convertTimeToMinutes(startTime);
+    const endMinutes = convertTimeToMinutes(endTime);
+
+    // Check if end time is earlier than or equal to start time
+    if (startTime && endTime && startMinutes >= endMinutes) {
+      alert("End time must be later than start time!");
+      return;
+    }
+
     const eventData = {
       ...formData,
       created_by: user.id,
@@ -396,3 +412,7 @@ const Dashboard = ({ user }) => {
 };
 
 export default Dashboard;
+
+// Existing Events, ar unda iyos dashboardshi amis magivrad unda iyos registered events da marto unda achvenebdes daregistrirebul eventebs , witeli button unregister---it da rom daacherr magas unda krebodes makedan
+
+// registracia eventebze unda xdebodes event hubze da unda iyos marto green button register da rom daacher unda chndebodes dashboardze

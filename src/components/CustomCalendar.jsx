@@ -3,6 +3,7 @@ import "./Calendar.css";
 
 const CustomCalendar = ({ events = [], registrationStatus = {} }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   const getMonthDays = (year, month) => {
     const firstDay = new Date(year, month, 1);
@@ -25,6 +26,14 @@ const CustomCalendar = ({ events = [], registrationStatus = {} }) => {
     }
 
     return days;
+  };
+
+  const isSameDay = (date1, date2) => {
+    return (
+      date1.getDate() === date2.getDate() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getFullYear() === date2.getFullYear()
+    );
   };
 
   const getEventsForDay = (day) => {
@@ -78,7 +87,16 @@ const CustomCalendar = ({ events = [], registrationStatus = {} }) => {
     );
   };
 
+  const handleEventClick = (event) => {
+    setSelectedEvent(selectedEvent?.id === event.id ? null : event);
+  };
+
+  const closeEventDetails = () => {
+    setSelectedEvent(null);
+  };
+
   const days = getMonthDays(currentDate.getFullYear(), currentDate.getMonth());
+  const today = new Date();
 
   return (
     <div className="calendar-container">
@@ -103,22 +121,39 @@ const CustomCalendar = ({ events = [], registrationStatus = {} }) => {
 
         {days.map((day, index) => {
           const dayEvents = getEventsForDay(day.date);
+          const isToday = isSameDay(day.date, today);
+          const maxVisibleEvents = window.innerWidth <= 768 ? 2 : 3;
+
           return (
             <div
               key={index}
-              className={`calendar-day ${day.isPadding ? "padding-day" : ""}`}
+              className={`calendar-day ${day.isPadding ? "padding-day" : ""} ${
+                isToday ? "today" : ""
+              }`}
             >
               <div className="day-number">{day.date.getDate()}</div>
               <div className="event-list">
-                {dayEvents.map((event) => (
+                {dayEvents.slice(0, maxVisibleEvents).map((event) => (
                   <div
                     key={
                       event.id ||
                       `${event.title}-${event.date}-${event.startTime}`
                     }
-                    className="calendar-event"
+                    className={`calendar-event ${
+                      selectedEvent?.id === event.id ? "selected-event" : ""
+                    }`}
+                    onClick={() => handleEventClick(event)}
                   >
-                    {event.title || "Untitled"}
+                    <div className="event-title">
+                      {event.title || "Untitled"}
+                    </div>
+                    {event.description && (
+                      <div className="event-preview">
+                        {event.description.length > 30
+                          ? `${event.description.substring(0, 30)}...`
+                          : event.description}
+                      </div>
+                    )}
                     <div className="event-tooltip">
                       <strong>{event.title || "Untitled"}</strong>
                       {event.location && <div>Location: {event.location}</div>}
@@ -131,11 +166,56 @@ const CustomCalendar = ({ events = [], registrationStatus = {} }) => {
                     </div>
                   </div>
                 ))}
+                {dayEvents.length > maxVisibleEvents && (
+                  <div className="more-events">
+                    +{dayEvents.length - maxVisibleEvents} more
+                  </div>
+                )}
               </div>
             </div>
           );
         })}
       </div>
+
+      {selectedEvent && (
+        <div className="event-details-modal">
+          <div className="event-details-content">
+            <div className="event-details-header">
+              <h3>{selectedEvent.title || "Untitled Event"}</h3>
+              <button onClick={closeEventDetails} className="close-button">
+                ×
+              </button>
+            </div>
+            <div className="event-details-body">
+              {selectedEvent.location && (
+                <div className="detail-row">
+                  <strong>Location:</strong> {selectedEvent.location}
+                </div>
+              )}
+              {selectedEvent.startTime && (
+                <div className="detail-row">
+                  <strong>Time:</strong> {selectedEvent.startTime} -{" "}
+                  {selectedEvent.endTime}
+                </div>
+              )}
+              {selectedEvent.date && (
+                <div className="detail-row">
+                  <strong>Date:</strong>{" "}
+                  {new Date(selectedEvent.date).toLocaleDateString()}
+                </div>
+              )}
+              {selectedEvent.description && (
+                <div className="detail-row description">
+                  <strong>Description:</strong>
+                  <div className="description-text">
+                    {selectedEvent.description}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -51,7 +51,6 @@
 .event-item {
   display: flex;
   justify-content: space-between;
-  align-items: center;
   background: white;
   padding: 10px;
   margin-bottom: 10px;
@@ -106,7 +105,6 @@
 .event-item {
   display: flex;
   justify-content: space-between;
-  align-items: center;
   padding: 1rem;
   margin-bottom: 1rem;
   border: 1px solid #ddd;
@@ -183,4 +181,8 @@
 .add-to-calendar-btn:focus {
   outline: none;
   box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.5);
+}
+
+.ReactModal__Content {
+  inset: 20% !important ;
 }

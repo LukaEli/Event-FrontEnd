@@ -45,19 +45,28 @@
   margin-right: 1rem;
 }
 
-.logout-btn {
+.create-event-btn,
+.logout-btn,
+.register-btn,
+.unregister-btn .add-to-calendar-btn {
   padding: 0.5rem 1.2rem;
   border: none;
   border-radius: 4px;
-  background-color: #e74c3c;
+  background-color: #3498db;
   color: white;
   cursor: pointer;
   font-weight: 500;
   transition: background-color 0.3s ease;
+  width: 100%;
+  max-width: 200px;
 }
 
-.logout-btn:hover {
-  background-color: #c0392b;
+.create-event-btn:hover,
+.logout-btn:hover,
+.register-btn:hover,
+.unregister-btn:hover,
+.add-to-calendar-btn:hover {
+  background-color: #2980b9;
 }
 
 /* Active link styles */
@@ -79,76 +88,134 @@
   .welcome-message {
     display: none;
   }
+
+  .create-event-btn,
+  .logout-btn,
+  .register-btn,
+  .unregister-btn,
+  .add-to-calendar-btn {
+    width: 100%;
+    margin: 0.25rem 0;
+    padding: 10px;
+    height: 45px;
+  }
 }
 
 .events-container {
-  max-width: 800px; /* Limit the width for better readability */
-  margin: 0 auto; /* Center the container */
-  padding: 20px; /* Add some padding */
-  background-color: #f9f9f9; /* Light background color */
-  border-radius: 8px; /* Rounded corners */
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-}
-
-h1 {
-  font-size: 2em; /* Larger font size for the title */
-  margin-bottom: 20px; /* Space below the title */
-  text-align: center; /* Center the title */
-}
-
-input[type="text"] {
-  width: calc(100% - 100px); /* Full width minus button width */
-  padding: 10px; /* Padding for input */
-  border: 1px solid #ccc; /* Border for input */
-  border-radius: 4px; /* Rounded corners */
-  margin-right: 10px; /* Space between input and button */
-}
-
-button {
-  padding: 10px 20px; /* Padding for button */
-  background-color: #007bff; /* Button color */
-  color: white; /* Text color */
-  border: none; /* Remove border */
-  border-radius: 4px; /* Rounded corners */
-  cursor: pointer; /* Pointer cursor on hover */
-}
-
-button:hover {
-  background-color: #0056b3; /* Darker button color on hover */
+  max-width: 900px; /* Slightly wider container */
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: #f4f6f9; /* Softer background color */
 }
 
 .events-list {
-  list-style-type: none; /* Remove default list styles */
-  padding: 0; /* Remove padding */
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  padding: 0;
 }
 
 .event-item {
-  background-color: white; /* White background for event items */
-  margin: 10px 0; /* Space between items */
-  padding: 15px; /* Padding for items */
-  border-radius: 4px; /* Rounded corners */
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.event-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.event-details {
+  padding: 1rem;
+  flex-grow: 1;
 }
 
 .event-details h2 {
-  font-size: 1.5em; /* Font size for event title */
-  margin: 0; /* Remove default margin */
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.event-details p {
+  color: #7f8c8d;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
 }
 
 .event-meta {
-  display: flex; /* Flexbox for meta information */
-  justify-content: space-between; /* Space between items */
-  margin-top: 10px; /* Space above meta */
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0 1rem 1rem;
+  color: #34495e;
+  font-size: 0.85rem;
 }
 
-@media (max-width: 600px) {
-  input[type="text"] {
-    width: calc(100% - 20px); /* Full width on small screens */
-    margin-right: 0; /* Remove margin on small screens */
+.event-actions {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+.register-btn:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .events-list {
+    grid-template-columns: 1fr; /* Single column on small screens */
   }
 
-  button {
-    width: 100%; /* Full width button on small screens */
-    margin-top: 10px; /* Space above button */
+  .event-actions {
+    flex-direction: column;
+    gap: 0.5rem;
   }
+
+  .register-btn,
+  .unregister-btn,
+  .add-to-calendar-btn {
+    margin: 0.25rem 0;
+    width: 100%;
+  }
+}
+
+/* Search input and button styles */
+.search-container {
+  display: flex;
+  margin-bottom: 1.5rem;
+}
+
+.search-container input[type="text"] {
+  flex-grow: 1;
+  padding: 0.75rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  margin-right: 0.5rem;
+  transition: border-color 0.3s ease;
+}
+
+.search-container input[type="text"]:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.search-container button {
+  padding: 0.75rem 1.5rem;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.search-container button:hover {
+  background-color: #2980b9;
 }

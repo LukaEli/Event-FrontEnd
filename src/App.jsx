@@ -5,6 +5,7 @@ import Register from "./components/auth/Register";
 import Login from "./components/auth/Login";
 import Dashboard from "./components/Dashboard";
 import EventsList from "./components/EventList";
+import Modal from "react-modal";
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -17,6 +18,8 @@ function App() {
     return parsedUser;
   });
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   useEffect(() => {
     if (user) {
       localStorage.setItem("user", JSON.stringify(user));
@@ -25,17 +28,40 @@ function App() {
       localStorage.removeItem("user");
       localStorage.removeItem("role");
     }
+    Modal.setAppElement("#app");
   }, [user]);
+
+  const toggleModal = () => {
+    setIsModalOpen(!isModalOpen);
+  };
 
   return (
     <Router>
-      <div className="app">
-        <Navbar user={user} setUser={setUser} />
+      <div id="app" className="app">
+        <Navbar user={user} setUser={setUser} onCreateEvent={toggleModal} />
         <Routes>
-          <Route path="/" element={<EventsList />} />
+          <Route
+            path="/"
+            element={
+              <EventsList
+                user={user}
+                toggleModal={toggleModal}
+                isModalOpen={isModalOpen}
+              />
+            }
+          />
           <Route path="/register" element={<Register setUser={setUser} />} />
           <Route path="/login" element={<Login setUser={setUser} />} />
-          <Route path="/dashboard" element={<Dashboard user={user} />} />
+          <Route
+            path="/dashboard"
+            element={
+              <Dashboard
+                user={user}
+                toggleModal={toggleModal}
+                isModalOpen={isModalOpen}
+              />
+            }
+          />
         </Routes>
       </div>
     </Router>

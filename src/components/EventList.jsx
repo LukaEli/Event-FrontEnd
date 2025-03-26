@@ -84,8 +84,10 @@ const EventsList = ({ user, toggleModal, isModalOpen }) => {
       const eventsData = response.data || response;
 
       // Filter the events based on the search query
-      const filteredEvents = eventsData.filter((event) =>
-        event.title.toLowerCase().includes(searchQuery.toLowerCase())
+      const filteredEvents = eventsData.filter(
+        (event) =>
+          event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          event.description.toLowerCase().includes(searchQuery.toLowerCase())
       );
 
       // Update the events state with filtered results

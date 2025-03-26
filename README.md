@@ -1,5 +1,21 @@
 # Event Management System
 
+## 📚 Contents
+
+- [🌐 Hosted App](#-hosted-app)
+- [🔑 Login Credentials](#-login-credentials)
+- [Overview](#overview)
+- [🚀 Features](#-features)
+  - [User Features](#user-features)
+  - [Staff Features](#staff-features)
+- [🛠️ Technologies Used](#-technologies-used)
+  - [Frontend](#frontend)
+  - [Backend](#backend)
+  - [Additional Integrations](#additional-integrations)
+- [📋 Prerequisites](#-prerequisites)
+- [🔧 Installation](#-installation)
+- [Login](#login)
+
 ## 🌐 Hosted App
 
 You can access the hosted application [here](https://12event.netlify.app/).

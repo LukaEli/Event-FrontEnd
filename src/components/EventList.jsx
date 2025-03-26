@@ -87,7 +87,9 @@ const EventsList = ({ user, toggleModal, isModalOpen }) => {
       const filteredEvents = eventsData.filter(
         (event) =>
           event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          event.description.toLowerCase().includes(searchQuery.toLowerCase())
+          event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (event.location &&
+            event.location.toLowerCase().includes(searchQuery.toLowerCase()))
       );
 
       // Update the events state with filtered results
@@ -320,6 +322,3 @@ const EventsList = ({ user, toggleModal, isModalOpen }) => {
 };
 
 export default EventsList;
-
-//padding daumate searchis me event cardshi, kvemot
-// rom daacher cards daaamte add to google calendar button da remove google calendar (states refresh gaukete rom egreve gichvenos ganaxleba)
